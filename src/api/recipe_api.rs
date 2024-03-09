@@ -7,8 +7,8 @@ use crate::models::recipe_model::Recipe;
 use crate::repository::mongo_repo::MongoRepo;
 
 #[derive(Serialize, Deserialize)]
-struct Response {
-    message: String,
+pub(crate) struct Response {
+    pub(crate) message: String,
 }
 
 #[post("/recipes")]

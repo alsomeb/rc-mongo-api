@@ -4,6 +4,7 @@ use std::io::{Error, ErrorKind};
 use actix_web::{App, HttpServer};
 use actix_web::middleware::Logger;
 use actix_web::web::Data;
+use crate::api::health_check::health_check;
 use crate::api::recipe_api::{insert_recipe, get_recipes_by_email};
 
 use crate::models::app_data::AppData;
@@ -31,6 +32,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(firebase_auth.clone())
             .service(insert_recipe)
             .service(get_recipes_by_email)
+            .service(health_check)
     })
         .bind(("127.0.0.1", 8080))?
         .run()
