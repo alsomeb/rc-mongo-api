@@ -6,6 +6,15 @@ use crate::api::util::{Response, unauthorized_response};
 use crate::models::recipe_model::Recipe;
 use crate::repository::mongo_repo::MongoRepo;
 
+/*
+    The Result<FirebaseUser, actix_web::Error> type in our handler function's parameters is a pattern in Actix-web that allows your handler to work with extractors that might fail.
+    In this context, FirebaseUser is an extractor provided by the firebase_auth crate that attempts to extract and validate a Firebase user from the request,
+    typically by looking at the Authorization header for a Firebase JWT token.
+
+    Using Result<FirebaseUser, actix_web::Error> in our handler allows us to explicitly handle authentication failures.
+    This is useful for customizing the response in case of errors, such as providing a specific error message or status code, as we've done with the unauthorized_response() function.
+ */
+
 #[post("/recipes")]
 pub async fn insert_recipe(db: Data<MongoRepo>, new_recipe: Json<Recipe>, firebase_user: Result<FirebaseUser, actix_web::Error>) -> HttpResponse {
     // Util function checking if we have a valid token in Auth Header
