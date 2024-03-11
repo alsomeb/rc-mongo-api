@@ -1,8 +1,9 @@
 use std::env;
 use std::io::{Error, ErrorKind};
 
-use actix_web::{App, HttpServer};
 use actix_cors::Cors;
+use actix_web::{App, HttpServer};
+use actix_web::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use actix_web::middleware::Logger;
 use actix_web::web::Data;
 
@@ -30,7 +31,7 @@ async fn main() -> std::io::Result<()> {
         let cors = Cors::default()
             .allow_any_origin() // Allow all origins
             .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"]) // Specify the allowed methods
-            .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT, http::header::CONTENT_TYPE])
+            .allowed_headers(vec![AUTHORIZATION, ACCEPT, CONTENT_TYPE])
             .supports_credentials() // If you need to support credentials (cookies, session, etc.)
             .max_age(3600); // Set the max age for the preflight cache
 
