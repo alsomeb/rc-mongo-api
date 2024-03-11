@@ -1,4 +1,5 @@
 use std::env;
+
 use dotenv::dotenv;
 use firebase_auth::FirebaseAuth;
 

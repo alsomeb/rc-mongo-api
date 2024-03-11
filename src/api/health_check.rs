@@ -1,7 +1,7 @@
 use actix_web::{get, Responder};
 use actix_web::web::Json;
+use crate::api::util::Response;
 
-use crate::api::recipe_api::Response;
 
 /*
     Handler functions in Actix can return a wide range of objects that implement the Responder trait. This makes it a breeze to return consistent responses from your APIs.

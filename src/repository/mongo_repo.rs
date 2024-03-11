@@ -1,8 +1,8 @@
 extern crate dotenv;
 
 use std::env;
-use futures::TryStreamExt;
 
+use futures::TryStreamExt;
 use mongodb::{Client, Collection, Database};
 use mongodb::bson::doc;
 use mongodb::error::Error;

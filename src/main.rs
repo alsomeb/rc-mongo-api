@@ -15,6 +15,7 @@ mod models;
 mod repository;
 mod api;
 
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // So we can access db + firebase auth throughout the app in a shared state
@@ -23,7 +24,7 @@ async fn main() -> std::io::Result<()> {
     let db = Data::new(app_data.db);
     let firebase_auth = Data::new(app_data.firebase_auth);
 
-    env::set_var("RUST_LOG", "actix_web=info"); // Configure the logging level
+    env::set_var("RUST_LOG", "actix_web=info, warn"); // Configure the logging level
     env_logger::init(); // Initialize the logger
 
     // The move keyword attached to the closure gives it, HttpServer, ownership of the MongoDB configuration.
