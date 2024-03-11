@@ -13,6 +13,9 @@ use crate::repository::mongo_repo::MongoRepo;
 
     Using Result<FirebaseUser, actix_web::Error> in our handler allows us to explicitly handle authentication failures.
     This is useful for customizing the response in case of errors, such as providing a specific error message or status code, as we've done with the unauthorized_response() function.
+
+    However it's not strictly necessary to use Result<FirebaseUser, actix_web::Error> if our application's logic does not require custom error handling for authentication failures
+    but we want to provide 403 response which is not guaranteed without this implementation
  */
 
 #[post("/recipes")]
