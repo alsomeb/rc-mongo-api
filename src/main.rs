@@ -2,6 +2,7 @@ use std::env;
 use std::io::{Error, ErrorKind};
 
 use actix_web::{App, HttpServer};
+use actix_cors::Cors;
 use actix_web::middleware::Logger;
 use actix_web::web::Data;
 
@@ -26,7 +27,15 @@ async fn main() -> std::io::Result<()> {
 
     // The move keyword attached to the closure gives it, HttpServer, ownership of the MongoDB configuration.
     HttpServer::new(move || {
+        let cors = Cors::default()
+            .allow_any_origin() // Allow all origins
+            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"]) // Specify the allowed methods
+            .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT, http::header::CONTENT_TYPE])
+            .supports_credentials() // If you need to support credentials (cookies, session, etc.)
+            .max_age(3600); // Set the max age for the preflight cache
+
         App::new()
+            .wrap(cors)
             .wrap(Logger::new("%r %U %a - %s")) // Add the Logger middleware
             .app_data(db.clone())
             .app_data(firebase_auth.clone())
