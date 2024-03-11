@@ -14,6 +14,8 @@ futures = "0.3.30"
 env_logger = "0.11.3"
 log = "0.4.21"
 firebase-auth = "0.4.2"
+http = { version = "1.1.0", features = [] }
+actix-cors = "0.7.0"
 
 [dependencies.mongodb]
 version = "2.8.1"
