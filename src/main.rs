@@ -2,13 +2,11 @@ use std::env;
 use std::io::{Error, ErrorKind};
 
 use actix_web::{App, HttpServer};
-use actix_cors::Cors;
-use actix_web::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use actix_web::middleware::Logger;
 use actix_web::web::Data;
-use crate::api::health_check::health_check;
-use crate::api::recipe_api::{insert_recipe, get_recipes_by_email};
 
+use crate::api::health_check::health_check;
+use crate::api::recipe_api::{get_recipes_by_email, insert_recipe};
 use crate::models::app_data::AppData;
 
 mod models;
@@ -28,15 +26,7 @@ async fn main() -> std::io::Result<()> {
 
     // The move keyword attached to the closure gives it, HttpServer, ownership of the MongoDB configuration.
     HttpServer::new(move || {
-        let cors = Cors::default()
-            .allowed_origin("https://andtif.codes")
-            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-            .allowed_headers(vec![AUTHORIZATION, ACCEPT])
-            .allowed_header(CONTENT_TYPE)
-            .max_age(3600);
-
         App::new()
-            .wrap(cors)
             .wrap(Logger::new("%r %U %a - %s")) // Add the Logger middleware
             .app_data(db.clone())
             .app_data(firebase_auth.clone())
