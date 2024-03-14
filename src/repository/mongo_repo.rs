@@ -5,6 +5,7 @@ use std::env;
 use futures::TryStreamExt;
 use mongodb::{Client, Collection, Database};
 use mongodb::bson::doc;
+use mongodb::bson::oid::ObjectId;
 use mongodb::error::Error;
 
 use crate::models::recipe_model::Recipe;
@@ -130,20 +131,18 @@ impl MongoRepo {
         let user_option = result.ok().and_then(|user_result| user_result); // Some languages call this operation flatmap
         user_option
     }
-
-    pub async fn delete_user_by_id(&self, id: &str) -> Option<User> {
-        let col = MongoRepo::collection_switch::<User>(&self, CollectionName::User).await;
-        let obj_id = ObjectId::parse_str(id).unwrap_or_default();
+ */
+    pub async fn delete_recipe_by_id(&self, id: &str) -> Option<Recipe> {
+        let col = MongoRepo::collection_switch::<Recipe>(&self, CollectionName::Recipes).await;
+        // Convert to Object Id
+        let obj_id = ObjectId::parse_str(id).ok()?;
         let filter = doc!{"_id": obj_id};
 
-        let result = col
-            .find_one_and_delete(filter, None)
+       col.find_one_and_delete(filter, None)
             .await
-            .ok()?; // ok() method to convert from Result<T, E> to Option<T>, which is a valid approach when you want to discard the error and work with an Option
+            .ok()? // ok() method to convert from Result<T, E> to Option<T>, which is a valid approach when you want to discard the error and work with an Option
 
-        result
     }
 
- */
 
 }

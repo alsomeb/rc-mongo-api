@@ -1,5 +1,5 @@
-use actix_web::{get, HttpResponse, post};
-use actix_web::web::{Data, Json};
+use actix_web::{delete, get, HttpResponse, post};
+use actix_web::web::{Data, Json, Path};
 use firebase_auth::FirebaseUser;
 
 use crate::api::util::{Response, unauthorized_response};
@@ -60,4 +60,20 @@ pub async fn get_recipes_by_email(db: Data<MongoRepo>, firebase_user: Result<Fir
         Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
 }
+
+#[delete("/recipes/{id}")]
+pub async fn delete_recipe_by_id(db: Data<MongoRepo>, id: Path<String>, firebase_user: Result<FirebaseUser, actix_web::Error>) -> HttpResponse {
+    if let Err(_) = firebase_user {
+        return unauthorized_response();
+    }
+
+    let id = id.into_inner();
+
+    match db.delete_recipe_by_id(id.as_str()).await {
+        Some(_) => HttpResponse::Ok().json(Response { message: format!("Recipe with ID: {} deleted", id)}),
+        None => HttpResponse::NotFound().json(Response { message: format!("No recipe with ID: {} found", id) })
+    }
+}
+
+
 
