@@ -23,12 +23,14 @@ WORKDIR /usr/local/bin
 # Copy the binary from the builder stage
 COPY --from=builder /usr/src/rc-mongo-api/target/release/rc-mongo-api .
 
+# Copy the .env file
+COPY --from=builder /usr/src/rc-mongo-api/.env .
+
 # Make sure the binary is executable
 RUN chmod +x rc-mongo-api
 
 # Command to run the executable
 CMD ["./rc-mongo-api"]
-
 
 ## This Dockerfile uses a multi-stage build process to create a lean production image:
 
