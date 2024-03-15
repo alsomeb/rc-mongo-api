@@ -7,6 +7,7 @@ use mongodb::{Client, Collection, Database};
 use mongodb::bson::doc;
 use mongodb::bson::oid::ObjectId;
 use mongodb::error::Error;
+use mongodb::options::{FindOneAndReplaceOptions, ReturnDocument};
 
 use crate::models::recipe_model::Recipe;
 
@@ -26,7 +27,7 @@ impl MongoRepo {
         let uri = env::var("MONGO_URI").expect("MONGO_URI environment variable not set");
         let client = Client::with_uri_str(uri).await.expect("Failed to connect to MongoDB with provided URI");
         let db = client.database("alsomeb");
-        MongoRepo {db}
+        MongoRepo { db }
     }
 
     pub async fn collection_switch<T>(data_source: &Self, col_name: CollectionName) -> Collection<T> {
@@ -44,6 +45,17 @@ impl MongoRepo {
             .await?;
 
         Ok(recipe_result.inserted_id.to_string())
+    }
+
+    pub async fn delete_recipe_by_id(&self, id: &str) -> Option<Recipe> {
+        let col = MongoRepo::collection_switch::<Recipe>(&self, CollectionName::Recipes).await;
+        // Convert to Object Id
+        let obj_id = ObjectId::parse_str(id).ok()?;
+        let filter = doc! {"_id": obj_id};
+
+        col.find_one_and_delete(filter, None)
+            .await
+            .ok()? // ok() method to convert from Result<T, E> to Option<T>, which is a valid approach when you want to discard the error and work with an Option
     }
 
     pub async fn get_recipes_by_email(&self, email: &str) -> Result<Vec<Recipe>, Error> {
@@ -76,50 +88,29 @@ impl MongoRepo {
 
         Ok(recipes)
     }
-/*
-    pub async fn update_user_by_id(&self, id: &String, new_user: User) -> Option<User> {
-        let col = MongoRepo::collection_switch::<User>(&self, CollectionName::User).await;
-        let obj_id = ObjectId::parse_str(id).unwrap_or_default();
+
+    pub async fn update_recipe_by_id(&self, id: &str, new_recipe: Recipe) -> Option<Recipe> {
+        let col = MongoRepo::collection_switch::<Recipe>(&self, CollectionName::Recipes).await;
+
+        let obj_id = ObjectId::parse_str(id).ok()?;
         let filter = doc! {"_id": obj_id};
 
-        let updated_doc = col
-            .find_one_and_replace(
-                filter,
-                new_user,
-                FindOneAndReplaceOptions::builder() // Vi vill ha Dokumentet EFTER med nya uppdateringen, använder "FindOneAndReplaceOptions::Builder()"
-                    .return_document(ReturnDocument::After)
-                    .build())
+        col.find_one_and_replace(
+            filter,
+            new_recipe,
+            FindOneAndReplaceOptions::builder() // OPTIONS med builder: Vi vill ha Dokumentet EFTER med nya uppdateringen, använder "FindOneAndReplaceOptions::Builder()"
+                .return_document(ReturnDocument::After)
+                .build())
             .await
-            .ok()?; // ok() method to convert from Result<T, E> to Option<T>, which is a valid approach when you want to discard the error and work with an Option
-
-
-        updated_doc
-    }
-
-    pub async fn get_all_users(&self) -> Result<Vec<User>, Error> {
-        let col = MongoRepo::collection_switch::<User>(&self, CollectionName::User).await;
-
-        let mut cursors = col
-            .find(None, None) // without any options & filters to match all documents
-            .await?;
-
-        let mut users: Vec<User> = Vec::new();
-
-        while let Some(user) = cursors
-            .try_next()
-            .await?
-        {
-            users.push(user)
-        }
-
-        Ok(users)
+            .ok()? // ok() method to convert from Result<T, E> to Option<T>, which is a valid approach when you want to discard the error and work with an Option
     }
 
     // Denna är förbättrad och kommer ej PANIC vid error, samt Return Option<User> istället
-    pub async fn get_user_by_id(&self, id: &String) -> Option<User> {
-        let col = MongoRepo::collection_switch::<User>(&self, CollectionName::User).await;
-        let obj_id = ObjectId::parse_str(id).unwrap_or_default();
-        let filter = doc!{"_id": obj_id};
+    pub async fn get_recipe_by_id(&self, id: &str) -> Option<Recipe> {
+        let col = MongoRepo::collection_switch::<Recipe>(&self, CollectionName::Recipes).await;
+
+        let obj_id = ObjectId::parse_str(id).ok()?;
+        let filter = doc! {"_id": obj_id};
 
         let result = col
             .find_one(filter, None)
@@ -131,18 +122,24 @@ impl MongoRepo {
         let user_option = result.ok().and_then(|user_result| user_result); // Some languages call this operation flatmap
         user_option
     }
- */
-    pub async fn delete_recipe_by_id(&self, id: &str) -> Option<Recipe> {
+
+    // TODO Använd pagable
+    pub async fn get_all_recipes_pageable(&self) -> Result<Vec<Recipe>, Error> {
         let col = MongoRepo::collection_switch::<Recipe>(&self, CollectionName::Recipes).await;
-        // Convert to Object Id
-        let obj_id = ObjectId::parse_str(id).ok()?;
-        let filter = doc!{"_id": obj_id};
 
-       col.find_one_and_delete(filter, None)
-            .await
-            .ok()? // ok() method to convert from Result<T, E> to Option<T>, which is a valid approach when you want to discard the error and work with an Option
+        let mut cursors = col
+            .find(None, None) // without any options & filters to match all documents
+            .await?;
 
+        let mut users: Vec<Recipe> = Vec::new();
+
+        while let Some(user) = cursors
+            .try_next()
+            .await?
+        {
+            users.push(user)
+        }
+
+        Ok(users)
     }
-
-
 }

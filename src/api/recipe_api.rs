@@ -1,6 +1,7 @@
-use actix_web::{delete, get, HttpResponse, post};
+use actix_web::{delete, get, HttpResponse, post, put};
 use actix_web::web::{Data, Json, Path};
 use firebase_auth::FirebaseUser;
+use mongodb::bson::oid::ObjectId;
 
 use crate::api::util::{Response, unauthorized_response};
 use crate::models::recipe_model::Recipe;
@@ -42,6 +43,33 @@ pub async fn insert_recipe(db: Data<MongoRepo>, new_recipe: Json<Recipe>, fireba
     }
 }
 
+#[put("/recipes/{id}")]
+pub async fn update_recipe_by_id(db: Data<MongoRepo>, id: Path<String>, new_recipe: Json<Recipe>, firebase_user: Result<FirebaseUser, actix_web::Error>) -> HttpResponse {
+    if let Err(_) = firebase_user {
+        return unauthorized_response();
+    }
+
+    // Shadowing variable, overwriting
+    let id = id.into_inner();
+    let object_id = ObjectId::parse_str(&id).ok();
+
+    // Take ownership of the inner `Recipe` to avoid cloning
+    let new_recipe = new_recipe.into_inner();
+    let data = Recipe {
+        id: object_id,
+        title: new_recipe.title,
+        description: new_recipe.description,
+        steps: new_recipe.steps,
+        ingredients: new_recipe.ingredients,
+        email: new_recipe.email,
+    };
+
+    match db.update_recipe_by_id(id.as_str(), data).await {
+        Some(recipe) => HttpResponse::Ok().json(recipe),
+        None => HttpResponse::BadRequest().json(Response {message: "No ID Match".to_string()}),
+    }
+}
+
 
 #[get("/recipes/user")]
 pub async fn get_recipes_by_email(db: Data<MongoRepo>, firebase_user: Result<FirebaseUser, actix_web::Error>) -> HttpResponse {
@@ -71,7 +99,21 @@ pub async fn delete_recipe_by_id(db: Data<MongoRepo>, id: Path<String>, firebase
 
     match db.delete_recipe_by_id(id.as_str()).await {
         Some(_) => HttpResponse::Ok().json(Response { message: format!("Recipe with ID: {} deleted", id)}),
-        None => HttpResponse::NotFound().json(Response { message: format!("No recipe with ID: {} found", id) })
+        None => HttpResponse::BadRequest().json(Response { message: format!("No recipe with ID: {} found", id) })
+    }
+}
+
+#[get("/recipes/{id}")]
+pub async fn get_recipe_by_id(db: Data<MongoRepo>, id: Path<String>, firebase_user: Result<FirebaseUser, actix_web::Error>) -> HttpResponse {
+    if let Err(_) = firebase_user {
+        return unauthorized_response();
+    }
+
+    let id = id.into_inner();
+
+    match db.get_recipe_by_id(id.as_str()).await {
+        Some(recipe) => HttpResponse::Ok().json(recipe),
+        None => HttpResponse::BadRequest().json(Response { message: format!("No recipe with ID: {} found", id) })
     }
 }
 
