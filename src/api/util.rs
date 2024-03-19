@@ -1,5 +1,7 @@
 use actix_web::HttpResponse;
+use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
+use crate::models::recipe_model::{Recipe, RecipeDTO};
 
 #[derive(Serialize, Deserialize)]
 pub struct Response {
@@ -20,4 +22,51 @@ pub fn unauthorized_response() -> HttpResponse {
     HttpResponse::Forbidden().json(Response {
         message: "Missing or invalid JWT Token".to_string(),
     })
+}
+
+#[derive(Deserialize)]
+pub struct PaginationParams {
+    pub page: Option<u32>,
+    pub per_page: Option<u32>,
+}
+
+
+#[derive(Debug)]
+pub enum RecipeStatus {
+    Created,
+    Updated
+}
+
+/// input_recipe: The recipe to be mapped,
+/// id: Option<ObjectId> (for update recipe pass ObjectId)
+/// status: Created or Updated recipe
+pub fn map_input_dto(input_recipe_dto: RecipeDTO, id: Option<ObjectId>, status: RecipeStatus) -> Recipe {
+    let bson_date = mongodb::bson::DateTime::now();
+
+    match status {
+        RecipeStatus::Created => {
+            Recipe {
+                id, // Om None Mongo Genererar
+                title: input_recipe_dto.title,
+                description: input_recipe_dto.description,
+                steps: input_recipe_dto.steps,
+                ingredients: input_recipe_dto.ingredients,
+                email: input_recipe_dto.email,
+                created: Some(bson_date),
+                updated: bson_date
+            }
+        }
+        RecipeStatus::Updated => {
+            Recipe {
+                id, // Om None Mongo Genererar
+                title: input_recipe_dto.title,
+                description: input_recipe_dto.description,
+                steps: input_recipe_dto.steps,
+                ingredients: input_recipe_dto.ingredients,
+                email: input_recipe_dto.email,
+                created: None,
+                updated: bson_date
+            }
+        }
+    }
 }

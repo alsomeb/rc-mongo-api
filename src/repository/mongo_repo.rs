@@ -7,7 +7,7 @@ use mongodb::{Client, Collection, Database};
 use mongodb::bson::doc;
 use mongodb::bson::oid::ObjectId;
 use mongodb::error::Error;
-use mongodb::options::{FindOneAndReplaceOptions, ReturnDocument};
+use mongodb::options::{FindOneAndUpdateOptions, FindOptions, ReturnDocument};
 
 use crate::models::recipe_model::Recipe;
 
@@ -95,10 +95,21 @@ impl MongoRepo {
         let obj_id = ObjectId::parse_str(id).ok()?;
         let filter = doc! {"_id": obj_id};
 
-        col.find_one_and_replace(
+        let partial_update_doc = doc! {
+        "$set": {
+            "title": new_recipe.title,
+            "description": new_recipe.description,
+            "steps": new_recipe.steps,
+            "ingredients": new_recipe.ingredients,
+            "email": new_recipe.email,
+            "updated": mongodb::bson::DateTime::now(),
+        }
+    };
+
+        col.find_one_and_update(
             filter,
-            new_recipe,
-            FindOneAndReplaceOptions::builder() // OPTIONS med builder: Vi vill ha Dokumentet EFTER med nya uppdateringen, använder "FindOneAndReplaceOptions::Builder()"
+            partial_update_doc,
+            FindOneAndUpdateOptions::builder() // OPTIONS med builder: Vi vill ha Dokumentet EFTER med nya uppdateringen, använder "FindOneAndReplaceOptions::Builder()"
                 .return_document(ReturnDocument::After)
                 .build())
             .await
@@ -123,12 +134,23 @@ impl MongoRepo {
         user_option
     }
 
-    // TODO Använd pagable
-    pub async fn get_all_recipes_pageable(&self) -> Result<Vec<Recipe>, Error> {
+    pub async fn get_all_recipes_pageable(&self, page: u32, per_page: u32) -> Result<Vec<Recipe>, Error> {
         let col = MongoRepo::collection_switch::<Recipe>(&self, CollectionName::Recipes).await;
 
+        // Calculate the ship and limit values
+        // is used to adjust for the indexing of pages, which typically starts at 1 for human readability and usability,
+        // while the actual data skipping in a database query starts at 0.
+        let skip = (page - 1) * per_page;
+        let limit = per_page;
+
+        // Find Options
+        let find_options = FindOptions::builder()
+            .skip(Some(skip as u64))
+            .limit(Some(limit as i64))
+            .build();
+
         let mut cursors = col
-            .find(None, None) // without any options & filters to match all documents
+            .find(None, find_options) // without any options & filters to match all documents
             .await?;
 
         let mut users: Vec<Recipe> = Vec::new();

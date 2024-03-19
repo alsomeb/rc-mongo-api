@@ -1,10 +1,10 @@
 use actix_web::{delete, get, HttpResponse, post, put};
-use actix_web::web::{Data, Json, Path};
+use actix_web::web::{Data, Json, Path, Query};
 use firebase_auth::FirebaseUser;
 use mongodb::bson::oid::ObjectId;
 
-use crate::api::util::{Response, unauthorized_response};
-use crate::models::recipe_model::Recipe;
+use crate::api::util::{map_input_dto, PaginationParams, RecipeStatus, Response, unauthorized_response};
+use crate::models::recipe_model::RecipeDTO;
 use crate::repository::mongo_repo::MongoRepo;
 
 /*
@@ -20,31 +20,24 @@ use crate::repository::mongo_repo::MongoRepo;
  */
 
 #[post("/recipes")]
-pub async fn insert_recipe(db: Data<MongoRepo>, new_recipe: Json<Recipe>, firebase_user: Result<FirebaseUser, actix_web::Error>) -> HttpResponse {
+pub async fn insert_recipe(db: Data<MongoRepo>, new_recipe: Json<RecipeDTO>, firebase_user: Result<FirebaseUser, actix_web::Error>) -> HttpResponse {
     // Util function checking if we have a valid token in Auth Header
     if let Err(_) = firebase_user {
         return unauthorized_response();
     }
 
     // Take ownership of the inner `Recipe` to avoid cloning
-    let new_recipe = new_recipe.into_inner();
-    let data = Recipe {
-        id: None, // Mongo Genererar
-        title: new_recipe.title,
-        description: new_recipe.description,
-        steps: new_recipe.steps,
-        ingredients: new_recipe.ingredients,
-        email: new_recipe.email,
-    };
+    let new_recipe_dto = new_recipe.into_inner();
+    let recipe_entity = map_input_dto(new_recipe_dto, None, RecipeStatus::Created);
 
-    match db.insert_recipe(data).await {
+    match db.insert_recipe(recipe_entity).await {
         Ok(recipe_id) => HttpResponse::Created().json(Response { message: format!("Recipe added with ID: {}", recipe_id) }),
         Err(err) => HttpResponse::InternalServerError().body(err.to_string()), // Bara om de blir Error i Servern
     }
 }
 
 #[put("/recipes/{id}")]
-pub async fn update_recipe_by_id(db: Data<MongoRepo>, id: Path<String>, new_recipe: Json<Recipe>, firebase_user: Result<FirebaseUser, actix_web::Error>) -> HttpResponse {
+pub async fn update_recipe_by_id(db: Data<MongoRepo>, id: Path<String>, new_recipe: Json<RecipeDTO>, firebase_user: Result<FirebaseUser, actix_web::Error>) -> HttpResponse {
     if let Err(_) = firebase_user {
         return unauthorized_response();
     }
@@ -54,17 +47,10 @@ pub async fn update_recipe_by_id(db: Data<MongoRepo>, id: Path<String>, new_reci
     let object_id = ObjectId::parse_str(&id).ok();
 
     // Take ownership of the inner `Recipe` to avoid cloning
-    let new_recipe = new_recipe.into_inner();
-    let data = Recipe {
-        id: object_id,
-        title: new_recipe.title,
-        description: new_recipe.description,
-        steps: new_recipe.steps,
-        ingredients: new_recipe.ingredients,
-        email: new_recipe.email,
-    };
+    let new_recipe_dto = new_recipe.into_inner();
+    let recipe_entity = map_input_dto(new_recipe_dto, object_id, RecipeStatus::Updated);
 
-    match db.update_recipe_by_id(id.as_str(), data).await {
+    match db.update_recipe_by_id(id.as_str(), recipe_entity).await {
         Some(recipe) => HttpResponse::Ok().json(recipe),
         None => HttpResponse::BadRequest().json(Response {message: "No ID Match".to_string()}),
     }
@@ -84,7 +70,7 @@ pub async fn get_recipes_by_email(db: Data<MongoRepo>, firebase_user: Result<Fir
     let email = user.email.unwrap_or("empty email".to_string());
 
     match db.get_recipes_by_email(email.as_str()).await {
-        Ok(users) => HttpResponse::Ok().json(users),
+        Ok(recipes) => HttpResponse::Ok().json(recipes),
         Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
 }
@@ -114,6 +100,24 @@ pub async fn get_recipe_by_id(db: Data<MongoRepo>, id: Path<String>, firebase_us
     match db.get_recipe_by_id(id.as_str()).await {
         Some(recipe) => HttpResponse::Ok().json(recipe),
         None => HttpResponse::BadRequest().json(Response { message: format!("No recipe with ID: {} found", id) })
+    }
+}
+
+// This setup allows the /recipes endpoint to accept page and per_page query parameters for
+// ex ../recipes?page=1&per_page=20 -> Ger Page 1 och 20 Resultat
+#[get("/recipes")]
+pub async fn get_all_recipes_pagination(db: Data<MongoRepo>, firebase_user: Result<FirebaseUser, actix_web::Error>, params: Query<PaginationParams>) -> HttpResponse {
+    if let Err(_) = firebase_user {
+        return unauthorized_response();
+    }
+
+    // Details of pagination & Defaults
+    let page = params.page.unwrap_or(1);
+    let per_page = params.per_page.unwrap_or(5);
+
+    match db.get_all_recipes_pageable(page, per_page).await {
+        Ok(recipes) => HttpResponse::Ok().json(recipes),
+        Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
 }
 
