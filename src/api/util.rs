@@ -52,6 +52,7 @@ pub fn map_input_dto(input_recipe_dto: RecipeDTO, id: Option<ObjectId>, status: 
                 steps: input_recipe_dto.steps,
                 ingredients: input_recipe_dto.ingredients,
                 email: input_recipe_dto.email,
+                tags: input_recipe_dto.tags,
                 created: Some(bson_date),
                 updated: bson_date
             }
@@ -64,6 +65,7 @@ pub fn map_input_dto(input_recipe_dto: RecipeDTO, id: Option<ObjectId>, status: 
                 steps: input_recipe_dto.steps,
                 ingredients: input_recipe_dto.ingredients,
                 email: input_recipe_dto.email,
+                tags: input_recipe_dto.tags,
                 created: None,
                 updated: bson_date
             }

@@ -10,6 +10,7 @@ pub struct Recipe {
     pub steps: Vec<String>,
     pub ingredients: Vec<String>,
     pub email: String,
+    pub tags: Vec<String>,
     pub created: Option<mongodb::bson::DateTime>, // Då vi inte vill create alltid
     pub updated: mongodb::bson::DateTime
 }
@@ -23,5 +24,6 @@ pub struct RecipeDTO {
     pub steps: Vec<String>,
     pub ingredients: Vec<String>,
     pub email: String,
+    pub tags: Vec<String>,
     // Created & Updated will be done in the code not from request
 }
