@@ -50,7 +50,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_all_recipes_pagination)
     })
         //.bind(("127.0.0.1", 8080))?
-        .bind(("0.0.0.0", 8081))? //for docker network
+        .bind(("0.0.0.0", 8082))? //for docker network
         .run()
         .await
 }
