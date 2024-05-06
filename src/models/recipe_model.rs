@@ -31,6 +31,6 @@ pub struct RecipeDTO {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ImageUrlChangeRequest {
+pub struct PhotoUrlChangeRequest {
     pub photo_url: String,
 }

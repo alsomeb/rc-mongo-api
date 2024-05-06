@@ -4,7 +4,7 @@ use firebase_auth::FirebaseUser;
 use mongodb::bson::oid::ObjectId;
 
 use crate::api::util::{map_input_dto, PaginationParams, RecipeStatus, Response, unauthorized_response};
-use crate::models::recipe_model::{ImageUrlChangeRequest, RecipeDTO};
+use crate::models::recipe_model::{PhotoUrlChangeRequest, RecipeDTO};
 use crate::repository::mongo_repo::MongoRepo;
 
 /*
@@ -57,7 +57,7 @@ pub async fn update_recipe_by_id(db: Data<MongoRepo>, id: Path<String>, new_reci
 }
 
 #[patch("/recipes/{id}/imgurl")]
-pub async fn update_image_url_by_recipe_id(db: Data<MongoRepo>, id: Path<String>, image_url: Json<ImageUrlChangeRequest>, firebase_user: Result<FirebaseUser, actix_web::Error>) -> HttpResponse {
+pub async fn update_photo_url_by_recipe_id(db: Data<MongoRepo>, id: Path<String>, image_url: Json<PhotoUrlChangeRequest>, firebase_user: Result<FirebaseUser, actix_web::Error>) -> HttpResponse {
     if let Err(_) = firebase_user {
         return unauthorized_response();
     }

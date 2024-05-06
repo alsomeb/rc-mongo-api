@@ -123,7 +123,7 @@ impl MongoRepo {
 
         let partial_update_doc = doc! {
         "$set": {
-            "img_url": img_url,
+            "photo_url": img_url,
             "updated": mongodb::bson::DateTime::now(),
         }};
 
