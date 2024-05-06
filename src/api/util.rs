@@ -48,6 +48,7 @@ pub fn map_input_dto(input_recipe_dto: RecipeDTO, id: Option<ObjectId>, status: 
             Recipe {
                 id, // Om None Mongo Genererar
                 title: input_recipe_dto.title,
+                photo_url: input_recipe_dto.photo_url,
                 description: input_recipe_dto.description,
                 steps: input_recipe_dto.steps,
                 ingredients: input_recipe_dto.ingredients,
@@ -61,6 +62,7 @@ pub fn map_input_dto(input_recipe_dto: RecipeDTO, id: Option<ObjectId>, status: 
             Recipe {
                 id, // Om None Mongo Genererar
                 title: input_recipe_dto.title,
+                photo_url: input_recipe_dto.photo_url,
                 description: input_recipe_dto.description,
                 steps: input_recipe_dto.steps,
                 ingredients: input_recipe_dto.ingredients,

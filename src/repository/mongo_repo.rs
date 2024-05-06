@@ -103,8 +103,7 @@ impl MongoRepo {
             "ingredients": new_recipe.ingredients,
             "email": new_recipe.email,
             "updated": mongodb::bson::DateTime::now(),
-        }
-    };
+        }};
 
         col.find_one_and_update(
             filter,
@@ -114,6 +113,28 @@ impl MongoRepo {
                 .build())
             .await
             .ok()? // ok() method to convert from Result<T, E> to Option<T>, which is a valid approach when you want to discard the error and work with an Option
+    }
+
+    pub async fn update_recipe_img_url(&self, id: &str, img_url: &str) -> Option<Recipe> {
+        let col = MongoRepo::collection_switch::<Recipe>(&self, CollectionName::Recipes).await;
+
+        let obj_id = ObjectId::parse_str(id).ok()?;
+        let filter = doc! {"_id": obj_id};
+
+        let partial_update_doc = doc! {
+        "$set": {
+            "img_url": img_url,
+            "updated": mongodb::bson::DateTime::now(),
+        }};
+
+        col.find_one_and_update(
+            filter,
+            partial_update_doc,
+            FindOneAndUpdateOptions::builder()
+                .return_document(ReturnDocument::After)
+                .build())
+            .await
+            .ok()?
     }
 
     // Denna är förbättrad och kommer ej PANIC vid error, samt Return Option<User> istället

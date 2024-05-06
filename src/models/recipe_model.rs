@@ -11,6 +11,7 @@ pub struct Recipe {
     pub ingredients: Vec<String>,
     pub email: String,
     pub tags: Vec<String>,
+    pub photo_url: String,
     pub created: Option<mongodb::bson::DateTime>, // Då vi inte vill create alltid
     pub updated: mongodb::bson::DateTime
 }
@@ -22,8 +23,14 @@ pub struct RecipeDTO {
     pub title: String,
     pub description: String,
     pub steps: Vec<String>,
+    pub photo_url: String,
     pub ingredients: Vec<String>,
     pub email: String,
     pub tags: Vec<String>,
     // Created & Updated will be done in the code not from request
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ImageUrlChangeRequest {
+    pub photo_url: String,
 }

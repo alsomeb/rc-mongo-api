@@ -1,10 +1,10 @@
-use actix_web::{delete, get, HttpResponse, post, put};
+use actix_web::{delete, get, HttpResponse, patch, post, put};
 use actix_web::web::{Data, Json, Path, Query};
 use firebase_auth::FirebaseUser;
 use mongodb::bson::oid::ObjectId;
 
 use crate::api::util::{map_input_dto, PaginationParams, RecipeStatus, Response, unauthorized_response};
-use crate::models::recipe_model::RecipeDTO;
+use crate::models::recipe_model::{ImageUrlChangeRequest, RecipeDTO};
 use crate::repository::mongo_repo::MongoRepo;
 
 /*
@@ -51,6 +51,21 @@ pub async fn update_recipe_by_id(db: Data<MongoRepo>, id: Path<String>, new_reci
     let recipe_entity = map_input_dto(new_recipe_dto, object_id, RecipeStatus::Updated);
 
     match db.update_recipe_by_id(id.as_str(), recipe_entity).await {
+        Some(recipe) => HttpResponse::Ok().json(recipe),
+        None => HttpResponse::BadRequest().json(Response {message: "No ID Match".to_string()}),
+    }
+}
+
+#[patch("/recipes/{id}/imgurl")]
+pub async fn update_image_url_by_recipe_id(db: Data<MongoRepo>, id: Path<String>, image_url: Json<ImageUrlChangeRequest>, firebase_user: Result<FirebaseUser, actix_web::Error>) -> HttpResponse {
+    if let Err(_) = firebase_user {
+        return unauthorized_response();
+    }
+
+    let id = id.into_inner();
+    let new_url = image_url.photo_url.to_owned();
+
+    match db.update_recipe_img_url(id.as_str(), new_url.as_str()).await {
         Some(recipe) => HttpResponse::Ok().json(recipe),
         None => HttpResponse::BadRequest().json(Response {message: "No ID Match".to_string()}),
     }
