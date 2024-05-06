@@ -127,7 +127,9 @@ pub async fn get_recipe_img_url_by_id(db: Data<MongoRepo>, id: Path<String>, fir
     let id = id.into_inner();
 
     match db.get_recipe_img_url_by_id(id.as_str()).await {
-        Some(img_url) => HttpResponse::Ok().body(img_url),
+        Some(img_url) => HttpResponse::Ok()
+            .content_type("text/plain")
+            .body(img_url),
         None => HttpResponse::BadRequest().json(Response { message: format!("No recipe with ID: {} found", id) })
     }
 }
