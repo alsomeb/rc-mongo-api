@@ -118,6 +118,20 @@ pub async fn get_recipe_by_id(db: Data<MongoRepo>, id: Path<String>, firebase_us
     }
 }
 
+#[get("/recipes/{id}")]
+pub async fn get_recipe_img_url_by_id(db: Data<MongoRepo>, id: Path<String>, firebase_user: Result<FirebaseUser, actix_web::Error>) -> HttpResponse {
+    if let Err(_) = firebase_user {
+        return unauthorized_response();
+    }
+
+    let id = id.into_inner();
+
+    match db.get_recipe_img_url_by_id(id.as_str()).await {
+        Some(img_url) => HttpResponse::Ok().body(img_url),
+        None => HttpResponse::BadRequest().json(Response { message: format!("No recipe with ID: {} found", id) })
+    }
+}
+
 // This setup allows the /recipes endpoint to accept page and per_page query parameters for
 // ex ../recipes?page=1&per_page=20 -> Ger Page 1 och 20 Resultat
 #[get("/recipes")]

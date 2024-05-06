@@ -8,7 +8,7 @@ use actix_web::middleware::Logger;
 use actix_web::web::Data;
 
 use crate::api::health_check::health_check;
-use crate::api::recipe_api::{delete_recipe_by_id, get_all_recipes_pagination, get_recipe_by_id, get_recipes_by_email, insert_recipe, update_image_url_by_recipe_id, update_recipe_by_id};
+use crate::api::recipe_api::{delete_recipe_by_id, get_all_recipes_pagination, get_recipe_by_id, get_recipe_img_url_by_id, get_recipes_by_email, insert_recipe, update_image_url_by_recipe_id, update_recipe_by_id};
 use crate::models::app_data::AppData;
 
 mod models;
@@ -49,6 +49,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_recipe_by_id)
             .service(get_all_recipes_pagination)
             .service(update_image_url_by_recipe_id)
+            .service(get_recipe_img_url_by_id)
     })
         //.bind(("127.0.0.1", 8080))?
         .bind(("0.0.0.0", 8082))? //for docker network

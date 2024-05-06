@@ -155,6 +155,24 @@ impl MongoRepo {
         user_option
     }
 
+    pub async fn get_recipe_img_url_by_id(&self, id: &str) -> Option<String> {
+        let col = MongoRepo::collection_switch::<Recipe>(&self, CollectionName::Recipes).await;
+
+        let obj_id = ObjectId::parse_str(id).ok()?;
+        let filter = doc! {"_id": obj_id};
+
+        let result = col
+            .find_one(filter, None)
+            .await;
+
+        /*
+             In this code, ok() is used to convert Result<Option<Recipe>> to Option<Option<Recipe>>, and then and_then is used to flatten it. Finally, the inner Option<Recipe> is extracted
+        */
+        let user_option = result.ok()
+            .and_then(|user_result| Option::from(user_result.unwrap().photo_url));
+        user_option
+    }
+
     pub async fn get_all_recipes_pageable(&self, page: u32, per_page: u32) -> Result<Vec<Recipe>, Error> {
         let col = MongoRepo::collection_switch::<Recipe>(&self, CollectionName::Recipes).await;
 
