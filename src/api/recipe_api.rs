@@ -118,7 +118,7 @@ pub async fn get_recipe_by_id(db: Data<MongoRepo>, id: Path<String>, firebase_us
     }
 }
 
-#[get("/recipes/{id}")]
+#[get("/recipes/{id}/imgurl")]
 pub async fn get_recipe_img_url_by_id(db: Data<MongoRepo>, id: Path<String>, firebase_user: Result<FirebaseUser, actix_web::Error>) -> HttpResponse {
     if let Err(_) = firebase_user {
         return unauthorized_response();
