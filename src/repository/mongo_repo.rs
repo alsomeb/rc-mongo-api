@@ -165,12 +165,11 @@ impl MongoRepo {
             .find_one(filter, None)
             .await;
 
-        /*
-             In this code, ok() is used to convert Result<Option<Recipe>> to Option<Option<Recipe>>, and then and_then is used to flatten it. Finally, the inner Option<Recipe> is extracted
-        */
-        let user_option = result.ok()
-            .and_then(|user_result| Option::from(user_result.unwrap().photo_url));
-        user_option
+        match result {
+            Ok(Some(recipe)) => Option::from(recipe.photo_url),
+            Ok(None) => None,
+            Err(_) => None
+        }
     }
 
     pub async fn get_all_recipes_pageable(&self, page: u32, per_page: u32) -> Result<Vec<Recipe>, Error> {
