@@ -31,7 +31,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let cors = Cors::default()
             .allow_any_origin() // Allow all origins
-            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"]) // Specify the allowed methods
+            .allowed_methods(vec!["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]) // Specify the allowed methods
             .allowed_headers(vec![AUTHORIZATION, ACCEPT, CONTENT_TYPE])
             .supports_credentials() // If you need to support credentials (cookies, session, etc.)
             .max_age(3600); // Set the max age for the preflight cache
