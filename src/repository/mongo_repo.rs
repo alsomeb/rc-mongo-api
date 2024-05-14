@@ -137,6 +137,28 @@ impl MongoRepo {
             .ok()?
     }
 
+    pub async fn update_title_by_recipe_id(&self, id: &str, title: &str) -> Option<Recipe> {
+        let col = MongoRepo::collection_switch::<Recipe>(&self, CollectionName::Recipes).await;
+
+        let obj_id = ObjectId::parse_str(id).ok()?;
+        let filter = doc! {"_id": obj_id};
+
+        let partial_update_doc = doc! {
+        "$set": {
+            "title": title,
+            "updated": mongodb::bson::DateTime::now(),
+        }};
+
+        col.find_one_and_update(
+            filter,
+            partial_update_doc,
+            FindOneAndUpdateOptions::builder()
+                .return_document(ReturnDocument::After)
+                .build())
+            .await
+            .ok()?
+    }
+
     // Denna är förbättrad och kommer ej PANIC vid error, samt Return Option<User> istället
     pub async fn get_recipe_by_id(&self, id: &str) -> Option<Recipe> {
         let col = MongoRepo::collection_switch::<Recipe>(&self, CollectionName::Recipes).await;

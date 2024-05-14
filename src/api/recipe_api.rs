@@ -4,7 +4,7 @@ use firebase_auth::FirebaseUser;
 use mongodb::bson::oid::ObjectId;
 
 use crate::api::util::{map_input_dto, PaginationParams, RecipeStatus, Response, unauthorized_response};
-use crate::models::recipe_model::{PhotoUrlChangeRequest, RecipeDTO};
+use crate::models::recipe_model::{PhotoUrlChangeRequest, RecipeDTO, TitleChangeRequest};
 use crate::repository::mongo_repo::MongoRepo;
 
 /*
@@ -66,6 +66,21 @@ pub async fn update_photo_url_by_recipe_id(db: Data<MongoRepo>, id: Path<String>
     let new_url = image_url.photo_url.to_owned();
 
     match db.update_recipe_img_url(id.as_str(), new_url.as_str()).await {
+        Some(recipe) => HttpResponse::Ok().json(recipe),
+        None => HttpResponse::BadRequest().json(Response {message: "No ID Match".to_string()}),
+    }
+}
+
+#[patch("/recipes/{id}/title")]
+pub async fn update_title_by_recipe_id(db: Data<MongoRepo>, id: Path<String>, title: Json<TitleChangeRequest>, firebase_user: Result<FirebaseUser, actix_web::Error>) -> HttpResponse {
+    if let Err(_) = firebase_user {
+        return unauthorized_response();
+    }
+
+    let id = id.into_inner();
+    let new_title = title.into_inner().title;
+
+    match db.update_title_by_recipe_id(id.as_str(), new_title.as_str()).await {
         Some(recipe) => HttpResponse::Ok().json(recipe),
         None => HttpResponse::BadRequest().json(Response {message: "No ID Match".to_string()}),
     }
